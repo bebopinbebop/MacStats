@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:mac_stats}",
+      "name": "Debug MacStats",
+      "target": "MacStats",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug MacStats"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:mac_stats}",
+      "name": "Release MacStats",
+      "target": "MacStats",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release MacStats"
+    }
+  ]
+}
