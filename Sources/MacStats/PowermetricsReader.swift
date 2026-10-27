@@ -4,6 +4,14 @@ final class PowermetricsReader {
     private let executableURL = URL(fileURLWithPath: "/usr/bin/powermetrics")
 
     func temperature() -> Result<TemperatureReading, PowermetricsError> {
+        // The installed root service publishes an atomic, bounded sample. Reject
+        // stale data after sleep, service failure, or disabling the background job.
+        let sampleURL = URL(fileURLWithPath:
+            "/Library/Application Support/MacStats/temperature.txt")
+        if let cached = Self.cachedTemperature(from: sampleURL) {
+            return cached
+        }
+
         let process = Process()
         process.executableURL = executableURL
         process.arguments = ["--samplers", "smc", "-i", "1000", "-n", "1"]
@@ -46,6 +54,21 @@ final class PowermetricsReader {
             return .failure(.temperatureNotFound)
         }
 
+        return .success(reading)
+    }
+
+    static func cachedTemperature(from url: URL, now: Date = Date())
+        -> Result<TemperatureReading, PowermetricsError>? {
+        guard let values = try? url.resourceValues(forKeys: [.contentModificationDateKey]),
+              let modified = values.contentModificationDate,
+              now.timeIntervalSince(modified) >= 0,
+              now.timeIntervalSince(modified) < 35,
+              let text = try? String(contentsOf: url, encoding: .utf8) else {
+            return nil
+        }
+        guard let reading = parseTemperature(from: text) else {
+            return .failure(.temperatureNotFound)
+        }
         return .success(reading)
     }
 
